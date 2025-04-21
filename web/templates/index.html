@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Liveness Detection</title>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; }
+        video { width: 60%; }
+        button { font-size: 20px; padding: 10px 20px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Liveness Detection</h1>
+    <img src="{{ url_for('video') }}" width="640" height="480">
+    <br>
+    <button onclick="startLiveness()">Start</button>
+    <h2 id="status"></h2>
+    <h2 id="final-result"></h2>
+    <h2 id="action-result"></h2>
+
+    <script>
+        function startLiveness() {
+            fetch('/start')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('status').innerText = "Perform actions: " + data.actions.join(" and ");
+                    checkStatus();
+                });
+        }
+
+        function checkStatus() {
+            let interval = setInterval(() => {
+                fetch('/status')
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('action-result').innerText = "Current Action: " + data.current_action + " - " + data.status;
+                        if (data.status === "Action Done" || data.status === "Action Failed") {
+                            clearInterval(interval);
+                            checkResult();
+                        }
+                    });
+            }, 1000);
+        }
+
+        function checkResult() {
+            setTimeout(() => {
+                fetch('/result')
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('final-result').innerText = "Liveness Result: " + data.result;
+                    });
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
